@@ -1,2 +1,3 @@
 # PipelineLoggingBinding
-A binding of the LoggingInterfaces to the Pipeline library.
+
+A binding of the [LoggingInterfaces](https://github.com/swiftxml/LoggingInterfaces) to the [Pipeline](https://github.com/swiftxml/Pipeline) library.
