@@ -19,7 +19,6 @@ open class ConcurrentLogger<Message: Sendable & CustomStringConvertible,Mode: Se
     public typealias Message = Message
     public typealias Mode = Mode
     
-    internal let group = DispatchGroup()
     internal let queue: DispatchQueue
     
     public var loggingAction: (@Sendable (Message,Mode?) -> ())? = nil
@@ -38,28 +37,22 @@ open class ConcurrentLogger<Message: Sendable & CustomStringConvertible,Mode: Se
     private var closed = false
     
     open func log(_ message: Message, withMode mode: Mode? = nil) {
-        group.enter()
         self.queue.async {
             if !self.closed {
                 self.loggingAction?(message, mode)
             }
-            self.group.leave()
         }
     }
     
     open func close() throws {
-        group.wait()
-        group.enter()
-        self.queue.async {
+        self.queue.sync {
             if !self.closed {
                 self.closeAction?()
                 self.loggingAction = nil
                 self.closeAction = nil
                 self.closed = true
             }
-            self.group.leave()
         }
-        group.wait()
     }
     
 }
@@ -82,10 +75,8 @@ public class CollectingLogger<Message: Sendable & CustomStringConvertible,Mode: 
     /// Get all collected message events.
     public func getMessages() -> [Message] {
         var messages: [Message]? = nil
-        group.enter()
         self.queue.sync {
             messages = self.messages
-            self.group.leave()
         }
         return messages!
     }
